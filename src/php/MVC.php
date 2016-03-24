@@ -1,6 +1,6 @@
 <?php
-
-namespace DevLucid\Component\MVC;
+namespace Lucid\Component\MVC;
+use Lucid\Lucid;
 
 class MVC implements MVCInterface
 {
@@ -160,42 +160,5 @@ class MVC implements MVCInterface
         $class = $this->loadController($name);
         $object = new $class();
         return $object;
-    }
-
-    public function buildParameters($object, string $method, $parameters=[])
-    {
-        $objectClass = get_class($object);
-
-        # we need to use the Request object's methods for casting parameters
-        if(is_array($parameters) === true) {
-            $parameters = new Request($parameters);
-        }
-
-        if (method_exists($objectClass, $method) === false) {
-            throw new \Exception($objectClass.' does not contain a method named '.$method.'. Valid methods are: '.implode(', ', get_class_methods($objectClass)));
-        }
-
-        $r = new \ReflectionMethod($objectClass, $method);
-        $methodParameters = $r->getParameters();
-
-        # construct an array of parameters in the right order using the passed parameters
-        $boundParameters = [];
-        foreach ($methodParameters as $methodParameter) {
-            $type = strval($methodParameter->getType());
-            if ($parameters->is_set($methodParameter->name)) {
-                if (is_null($type) === true || $type == '' || method_exists($parameters, $type) === false) {
-                    $boundParameters[] = $parameters->raw($methodParameter->name);
-                } else {
-                    $boundParameters[] = $parameters->$type($methodParameter->name);
-                }
-            } else {
-                if ($methodParameter->isDefaultValueAvailable() === true) {
-                    $boundParameters[] = $methodParameter->getDefaultValue();
-                } else {
-                    throw new \Exception('Could not find a value to set for parameter '.$methodParameter->name.' of function '.$thisClass.'->'.$method.', and no default value was set.');
-                }
-            }
-        }
-        return $boundParameters;
     }
 }

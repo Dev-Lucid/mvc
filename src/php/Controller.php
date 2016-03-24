@@ -1,6 +1,6 @@
 <?php
-namespace Lucid\Components\MVC;
+namespace Lucid\Component\MVC;
 
-class Controller
+class Controller implements ControllerInterface
 {
 }

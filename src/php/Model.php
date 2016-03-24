@@ -1,5 +1,5 @@
 <?php
-namespace Lucid\Components\MVC;
+namespace Lucid\Component\MVC;
 
 class Model extends \Model
 {

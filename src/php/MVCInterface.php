@@ -1,10 +1,10 @@
 <?php
-namespace DevLucid\Component\MVC;
+namespace Lucid\Component\MVC;
 
 interface MVCInterface
 {
     public function setPath($type, $path);
-    
+
     public function findModel(string $name);
     public function loadModel(string $name);
     public function model(string $name, $id=null);
@@ -16,6 +16,4 @@ interface MVCInterface
     public function findController(string $name);
     public function loadController(string $name);
     public function controller(string $name);
-
-    public function buildParameters($object, string $method, $parameters);
 }
