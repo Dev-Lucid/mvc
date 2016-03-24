@@ -22,6 +22,11 @@ class MVC implements MVCInterface
         'controller' =>'',
     ];
 
+    public function __construct()
+    {
+        \Model::$auto_prefix_models = '\\App\\Model\\';
+    }
+
     public function setPath($type, $path)
     {
         $this->paths[$type] = realpath($path);

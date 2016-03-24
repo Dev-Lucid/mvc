@@ -1,7 +1,7 @@
 <?php
 namespace Lucid\Component\MVC;
 
-class Model extends \Model
+abstract class Model extends \Model implements ModelInterface
 {
     protected $readOnlyColumns = [];
     protected $writeOnceColumns = [];
