@@ -98,9 +98,8 @@ class MVC implements MVCInterface
     public function view(string $name, $parameters=[])
     {
         $class = $this->classPrefixes['view'] . $name . $this->classSuffixes['view'];
-
         $fileName = $this->findView($name);
-
+        /*
         if (is_object($parameters) === true) {
             $arrayParameters = $parameters->get_array();
         } elseif(is_array($parameters)) {
@@ -109,26 +108,30 @@ class MVC implements MVCInterface
             $arrayParameters = [];
         }
 
+
         foreach ($arrayParameters as $key=>$val) {
             global $$key;
             $$key = $val;
-        }
+        }*/
         $result = include($fileName);
+        /*
         foreach ($arrayParameters as $key=>$val) {
             unset($GLOBALS[$key]);
         }
+        */
 
         # if the view did NOT return content, but instead defined a view class, then
         # call its __construct method with the parameters bound, and then its render method
         if (class_exists($class) === true) {
-            $boundParameters = $this->buildParameters($class, '__construct', $parameters);
+            $view = new $class();
+            $boundParameters = $this->buildParameters($view, 'render', $parameters);
 
-            $view = new $class(...$boundParameters);
             if (in_array('Lucid\\Component\\MVC\\ViewInterface', class_implements($view)) === false) {
                 throw new \Exception('Could not use view '.$name.'. For compatibility, a view class must implement Lucid\\Component\\MVC\\ViewInterface.');
             }
-            return $view->render();
+            return $view->render(...$boundParameters);
         } else {
+            lucid::logger()->debug('class does NOT exist');
             return $result;
         }
     }
@@ -160,5 +163,42 @@ class MVC implements MVCInterface
         $class = $this->loadController($name);
         $object = new $class();
         return $object;
+    }
+
+    protected function buildParameters($object, string $method, $parameters=[])
+    {
+        $objectClass = get_class($object);
+
+        # we need to use the Request object's methods for casting parameters
+        if(is_array($parameters) === true) {
+            $parameters = new \Lucid\Component\Store\Store($parameters);
+        }
+
+        if (method_exists($objectClass, $method) === false) {
+            throw new \Exception($objectClass.' does not contain a method named '.$method.'. Valid methods are: '.implode(', ', get_class_methods($objectClass)));
+        }
+
+        $r = new \ReflectionMethod($objectClass, $method);
+        $methodParameters = $r->getParameters();
+
+        # construct an array of parameters in the right order using the passed parameters
+        $boundParameters = [];
+        foreach ($methodParameters as $methodParameter) {
+            $type = strval($methodParameter->getType());
+            if ($parameters->is_set($methodParameter->name)) {
+                if (is_null($type) === true || $type == '' || method_exists($parameters, $type) === false) {
+                    $boundParameters[] = $parameters->raw($methodParameter->name);
+                } else {
+                    $boundParameters[] = $parameters->$type($methodParameter->name);
+                }
+            } else {
+                if ($methodParameter->isDefaultValueAvailable() === true) {
+                    $boundParameters[] = $methodParameter->getDefaultValue();
+                } else {
+                    throw new \Exception('Could not find a value to set for parameter '.$methodParameter->name.' of function '.$thisClass.'->'.$method.', and no default value was set.');
+                }
+            }
+        }
+        return $boundParameters;
     }
 }

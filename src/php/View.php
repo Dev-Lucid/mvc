@@ -1,6 +1,6 @@
 <?php
 namespace Lucid\Component\MVC;
 
-class View
+abstract class View implements \Lucid\Component\MVC\ViewInterface
 {
 }
